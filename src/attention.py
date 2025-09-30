@@ -27,6 +27,7 @@ class CausalSelfAttention(nn.Module):
             context_length (int): Maximum sequence length for the causal mask.
         """
         super().__init__()
+        assert embed_dim % n_head == 0, "embed_dim must be divisible by num_heads"
         self.n_head = n_head
         self.context_length = context_length
 
