@@ -1,8 +1,7 @@
 import math
 from torch import nn
 import torch
-import torch.nn.functional as F  # Corrected import for clarity
-
+import torch.nn.functional as F
 from config import *
 
 class CausalSelfAttention(nn.Module):
