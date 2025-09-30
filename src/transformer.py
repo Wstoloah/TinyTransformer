@@ -11,21 +11,21 @@ class MLP(nn.Module):
                              and a dropout layer after the second linear layer.
     """
 
-    def __init__(self, n_embd: int, dropout: float, hidden_mult: int = 4):
+    def __init__(self, embed_dim: int, dropout: float, hidden_mult: int = 4):
         """
         Initialize the MLP module.
 
         Args:
-            n_embd (int): Embedding dimension.
+            embed_dim (int): Embedding dimension.
             dropout (float): Dropout probability.
             hidden_mult (int): Multiplier for the hidden layer size. Default is 4.
         """
         super().__init__()
-        hidden_size = hidden_mult * n_embd
-        self.net = nn.Sequential(
-            nn.Linear(n_embd, hidden_size),
+        hidden_size = hidden_mult * embed_dim
+        self.mlp = nn.Sequential(
+            nn.Linear(embed_dim, hidden_size),
             nn.GELU(),
-            nn.Linear(hidden_size, n_embd),
+            nn.Linear(hidden_size, embed_dim),
             nn.Dropout(dropout),
         )
 
@@ -39,7 +39,7 @@ class MLP(nn.Module):
         Returns:
             torch.Tensor: Output tensor of the same shape as input (B, T, C).
         """
-        return self.net(x)
+        return self.mlp(x)
 
 class TransformerBlock(nn.Module):
     """
@@ -51,21 +51,21 @@ class TransformerBlock(nn.Module):
         mlp (MLP): Multi-layer perceptron module.
     """
 
-    def __init__(self, n_embd: int, n_head: int, dropout: float, block_size: int):
+    def __init__(self, embed_dim: int, n_heads: int, dropout: float, context_length: int):
         """
         Initialize the TransformerBlock module.
 
         Args:
-            n_embd (int): Embedding dimension.
-            n_head (int): Number of attention heads.
+            embed_dim (int): Embedding dimension.
+            n_heads (int): Number of attention heads.
             dropout (float): Dropout probability.
-            block_size (int): Maximum sequence length for the causal mask.
+            context_length (int): Maximum sequence length for the causal mask.
         """
         super().__init__()
-        self.ln1 = nn.LayerNorm(n_embd)
-        self.attn = CausalSelfAttention(n_embd, n_head, dropout, block_size)
-        self.ln2 = nn.LayerNorm(n_embd)
-        self.mlp = MLP(n_embd, dropout)
+        self.ln1 = nn.LayerNorm(embed_dim)
+        self.attn = CausalSelfAttention(embed_dim, n_heads, dropout, context_length)
+        self.ln2 = nn.LayerNorm(embed_dim)
+        self.mlp = MLP(embed_dim, dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
