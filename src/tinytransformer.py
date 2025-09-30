@@ -1,10 +1,9 @@
-from config import *
-from utils import vocab_size
-from utils import get_batch, decode
+from .config import *
+from .utils import vocab_size
 import torch
 from torch import nn
-from torch.nn.functional import F
-from transformer import TransformerBlock
+import torch.nn.functional as F
+from .transformer import TransformerBlock
 
 class TinyTransformer(nn.Module):
     """
