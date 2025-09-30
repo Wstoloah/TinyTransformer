@@ -8,5 +8,5 @@ n_layer      = 2     # number of transformer blocks
 n_heads       = 2     # attention heads
 embed_dim    = 128   # embedding size
 dropout      = 0.1
-max_iters    = 1200  # training steps
+max_iters    = 100  # training steps
 lr           = 3e-3
