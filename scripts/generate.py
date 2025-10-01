@@ -1,26 +1,28 @@
-# # Generate text
-# print("Generating text...")
-# context = torch.zeros((1, 1), dtype=torch.long, device=device)  # Start with an empty context
-# sample = model.generate(context, max_new_tokens=400)[0].tolist()
-# print("Generated text:")
-# print(decode(sample))
+import torch
+from src.tinytransformer import TinyTransformer
+from src.config import device
+from src.utils import dataset
 
-# if __name__ == "__main__":
-#     import torch
+if __name__ == "__main__":
+    # Load the trained model
+    model = TinyTransformer().to(device)
+    model_path = "models/trained_tiny_transformer_crime-and-punishment.pth"
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
 
-#     # Initialize the model
-#     model = TinyTransformer()
+    print("**TinyTransformer Text Generator**")
+    user_prompt = input("Enter some text to start generation: ").lower()
 
-#     # Example input: batch of token indices (B=2, T=5)
-#     example_input = torch.randint(0, context_length, (2, 5))
+    # Encode user input into tokens
+    context = dataset.encode(user_prompt).unsqueeze(0).to(device)
 
-#     # Forward pass
-#     logits, loss = model(example_input, targets=example_input)
+    # Generate new tokens
+    with torch.no_grad():
+        sample = model.generate(context, max_new_tokens=200)[0].tolist()
 
-#     # Print the logits and loss
-#     print("Logits:", logits)
-#     if loss is not None:
-#         print("Loss:", loss.item())
-#     # Generate new tokens
-#     generated = model.generate(example_input, max_new_tokens=5)
-#     print("Generated sequence:", generated)
+    # Decode tokens back into text
+    generated_text = dataset.decode(sample)
+
+    print("\n--- Generated text ---")
+    print(generated_text)
+    print("----------------------")
