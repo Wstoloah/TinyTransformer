@@ -1,5 +1,6 @@
 import torch
 from .config import *
+from pathlib import Path
 
 class CharDataset:
     def __init__(self, text: str):
@@ -46,5 +47,15 @@ class CharDataset:
         return x.to(device), y.to(device)
 
 
-text = "I am ouissal :)"
+# creating a character dataset 
+file_path = Path("data/crime-and-punishment.txt")
+
+with open(file_path, "r", encoding="utf-8") as f:
+    text = f.read()
+
 dataset = CharDataset(text)
+
+print("Vocab size:", dataset.vocab_size)
+x, y = dataset.get_batch("train")
+print("x shape:", x.shape)  # (batch_size, context_length)
+print("y shape:", y.shape)
