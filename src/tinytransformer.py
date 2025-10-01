@@ -1,5 +1,5 @@
 from .config import *
-from .utils import vocab_size
+from .utils import dataset
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -27,14 +27,14 @@ class TinyTransformer(nn.Module):
             None (uses global config parameters).
         """
         super().__init__()
-        self.tok_emb = nn.Embedding(vocab_size, embed_dim)
+        self.tok_emb = nn.Embedding(dataset.vocab_size, embed_dim)
         self.pos_emb = nn.Embedding(context_length, embed_dim)
         self.drop = nn.Dropout(dropout)
         self.blocks = nn.Sequential(
             *[TransformerBlock(embed_dim, n_heads, dropout, context_length) for _ in range(n_layer)]
         )
         self.ln_f = nn.LayerNorm(embed_dim)
-        self.head = nn.Linear(embed_dim, vocab_size, bias=False)
+        self.head = nn.Linear(embed_dim, dataset.vocab_size, bias=False)
 
         # Tie weights: reuse embedding weights in output
         self.head.weight = self.tok_emb.weight

@@ -1,38 +1,50 @@
-import torch 
+import torch
 from .config import *
 
-text = '''From fairest creatures we desire increase,
-That thereby beauty's rose might never die,
-...'''
+class CharDataset:
+    def __init__(self, text: str):
+        # Build vocabulary
+        self.chars = sorted(set(text))
+        self.vocab_size = len(self.chars)
+        self.stoi = {ch: i for i, ch in enumerate(self.chars)}
+        self.itos = {i: ch for ch, i in self.stoi.items()}
 
-chars = sorted(list(set(text)))
-vocab_size = len(chars)
+        # Encode full dataset
+        data = self.encode(text)
+        n = int(0.9 * len(data))
+        self.train_data = data[:n]
+        self.val_data = data[n:]
 
-stoi = {ch:i for i,ch in enumerate(chars)}
-itos = {i:ch for ch,i in stoi.items()}
+    def encode(self, s: str) -> torch.Tensor:
+        """Convert string to tensor of indices."""
+        return torch.tensor([self.stoi[c] for c in s], dtype=torch.long)
 
-encode = lambda s: torch.tensor([stoi[c] for c in s], dtype=torch.long)
-decode = lambda t: ''.join(itos[int(i)] for i in t)
+    def decode(self, t: torch.Tensor) -> str:
+        """Convert tensor of indices back to string."""
+        return ''.join(self.itos[int(i)] for i in t)
 
+    def get_batch(self, split: str):
+        """Sample a mini-batch of sequences for training."""
+        d = self.train_data if split == 'train' else self.val_data
 
-# Prepare train/validation split
-data = encode(text)
-n = int(0.9*len(data))
-train_data, val_data = data[:n], data[n:]
+        # Handle very small datasets gracefully
+        cur_block = min(context_length, len(d) - 1)
+        if cur_block < 2:
+            raise ValueError("Dataset too small for batching.")
 
-# Function to sample mini-batches for training
-def get_batch(split):
-    d = train_data if split == 'train' else val_data
-    # ensure we never sample beyond available length
-    cur_block = min(context_length, max(2, len(d) - 2))
-    hi = len(d) - cur_block - 1
-    if hi <= 0:
-        # fall back to using the whole sequence if extremely short
-        x = d[:cur_block].unsqueeze(0)
-        y = d[1:cur_block+1].unsqueeze(0)
+        hi = len(d) - cur_block - 1
+        if hi <= 0:
+            # Use whole sequence as one batch
+            x = d[:cur_block].unsqueeze(0)
+            y = d[1:cur_block+1].unsqueeze(0)
+            return x.to(device), y.to(device)
+
+        # Random batch sampling
+        ix = torch.randint(0, hi, (batch_size,))
+        x = torch.stack([d[i:i+cur_block] for i in ix])
+        y = torch.stack([d[i+1:i+cur_block+1] for i in ix])
         return x.to(device), y.to(device)
 
-    ix = torch.randint(hi, (batch_size,))
-    x = torch.stack([d[i:i+cur_block] for i in ix])
-    y = torch.stack([d[i+1:i+cur_block+1] for i in ix])
-    return x.to(device), y.to(device)
+
+text = "I am ouissal :)"
+dataset = CharDataset(text)
